@@ -1,16 +1,40 @@
-from flask import Flask,render_template,url_for,request
-import pandas as pd 
-import pickle 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.feature_extraction.text import TfidfVectorizer
+import pickle
+
 import spacy
-from spacy import displacy
+from flask import Flask, render_template, request
+
 nlp = spacy.load('en_core_web_sm')
 from spacy.lang.en.stop_words import STOP_WORDS
 stopwords = list(STOP_WORDS)
 import string
 punct = string.punctuation
+
+import spacy
+
+nlp = spacy.load('en_core_web_sm')
+
+from sklearn.svm import LinearSVC
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+
+#from google.colab import files
+#uploaded = files.upload()
+
+# Commented out IPython magic to ensure Python compatibility.
+#setup
+import pandas as pd
+# %matplotlib inline
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from spacy.lang.en.stop_words import STOP_WORDS
+stopwords = list(STOP_WORDS)
+
+import string
+punct = string.punctuation
+
+#data = pd.read_csv(io.BytesIO(uploaded['Zenbra_cleanedReviews.csv']),sep=',\s+', delimiter=',', encoding="utf-8", skipinitialspace=True)
+data= pd.read_csv("Zenbra_cleanedReviews.csv", encoding="latin-1")
+data=data.dropna()
 
 
 def text_data_cleaning(sentence):
@@ -29,6 +53,20 @@ def text_data_cleaning(sentence):
 		if token not in stopwords and token not in punct:
 			cleaned_tokens.append(token)
 	return cleaned_tokens
+
+tfidf = TfidfVectorizer(tokenizer = text_data_cleaning)
+classifier = LinearSVC()
+
+X = data['cleanedReviews']
+y = data['is_bad_review']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+X_train.shape, X_test.shape
+
+clf = Pipeline([('tfidf', tfidf), ('clf', classifier)])
+
+clf.fit(X_train, y_train)
+
 
 # load the model from disk
 
